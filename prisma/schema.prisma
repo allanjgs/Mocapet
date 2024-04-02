@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  todos         Todo[]
+  clientes      Cliente[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Todo {
+  id    String @id @default(cuid())
+  title String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  doneAt    DateTime?
+}
+
+model Cliente {
+  id   String @id @default(cuid())
+  name String
+  cpf  String @unique
+  tel  String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  pet   Pet[]
+  tutor Tutor[]
+}
+
+model Tutor {
+  id   String @id @default(cuid())
+  name String
+  tel  String
+
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+  clienteId String
+}
+
+model Pet {
+  id   String  @id @default(cuid())
+  name String
+  tipo String
+  raca String
+  pelo String?
+
+  cliente     Cliente       @relation(fields: [clienteId], references: [id])
+  clienteId   String
+  Agendamento Agendamento[]
+}
+
+model Agendamento {
+  id       String   @id @default(cuid())
+  dataHora DateTime
+  anotacao String?
+  status   String   @default("Agendado")
+
+  pet   Pet    @relation(fields: [petId], references: [id])
+  petId String
+}
